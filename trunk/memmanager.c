@@ -8,8 +8,6 @@
 
 static memmanager *the_mem = NULL;
 
-#define SOUP_SIZE 70000 //bytes
-#define PROP_FREE 30 //porcentaje que el cleaner mantiene libre en la soup
 
 static void memmanager_const(memmanager *pthis) {
 	pthis->show_free_heap = &show_free_heap;
@@ -39,6 +37,11 @@ memmanager* memmanager_get(void) {
 		the_mem->init_heap();
 	}
 	return the_mem;
+}
+
+void memmanager_reset(void) {
+	if (the_mem != NULL) free(the_mem);
+	the_mem = NULL;
 }
 
 void init_heap () {
@@ -137,15 +140,16 @@ void defrag() {
 	}
 }
 
-int liberar(celula *pcel) {
+int liberar(segment *pmem) {
 	memmanager *pthis = memmanager_get();
-	if (pcel->mem!=NULL) {
-		pthis->free+=(pcel->mem)->size;
-		pthis->free_heap = g_list_insert_sorted(pthis->free_heap, pcel->mem,seg_comp);
-		pthis->used_heap = g_list_remove(pthis->used_heap, pcel->mem);
+	if (pmem!=NULL) {
+		pthis->free+=(pmem)->size;
+		pthis->free_heap = g_list_insert_sorted(pthis->free_heap, pmem,seg_comp);
+		pthis->used_heap = g_list_remove(pthis->used_heap, pmem);
 	}
 	else {
 		REC_error(SEG_NULL);
+		return 0;
 	}
 	REC_memory_free(total_free());
 	return 1;
@@ -154,7 +158,7 @@ int liberar(celula *pcel) {
 /* Se mantiene una lista enlazada con los segmentos libres y otra con los segmentos ocupados. 
  * Devuelve 0 si no hay lugar, 1 si maloco bien. */
 static pthread_mutex_t maloc;
-int malocar(celula *pcel) {
+segment* malocar(int csize) {
 	memmanager *pthis = memmanager_get();
 	int i;
 	GList *l = NULL;
@@ -177,14 +181,14 @@ int malocar(celula *pcel) {
 	freeseg = (segment *)l->data; 
 	
 	/* sigo buscando sino encuentro un segmento donde quepa la celula */
-	for (i=1; (pcel->size > freeseg->size) ;i++) {
+	for (i=1; (csize > freeseg->size) ;i++) {
 		l = g_list_nth(pthis->free_heap, i);
 		if (l==NULL) break;
 		freeseg = (segment *)l->data; 
 	}
 
 	/* si no encontre un segmento con espacio libre, retorno */
-	if (pcel->size > freeseg->size) {
+	if (csize > freeseg->size) {
 		REC_error(MEM_FULL);
 		//MUTEX UNLOCK
 		pthread_mutex_unlock(&maloc);
@@ -193,10 +197,10 @@ int malocar(celula *pcel) {
 	
 	newseg = (segment*)malloc(sizeof(*newseg));
 	newseg->inicio = freeseg->inicio;
-	newseg->fin = newseg->inicio + pcel->size - 1; /*0+80-1=79*/
-	newseg->size = pcel->size;
+	newseg->fin = newseg->inicio + csize - 1; /*0+80-1=79*/
+	newseg->size = csize;
 	
-	freeseg->size -= pcel->size;
+	freeseg->size -= csize;
 	
 	if (freeseg->size == 0) {
 		pthis->free_heap = g_list_remove(pthis->free_heap, freeseg);
@@ -206,7 +210,7 @@ int malocar(celula *pcel) {
 		REC_error(MEM_DESBORD);
 		assert(0);
 	}	
-	freeseg->inicio += pcel->size; 	
+	freeseg->inicio += csize; 	
 		
 	pthis->used_heap = g_list_append(pthis->used_heap,newseg);
 	
@@ -218,10 +222,9 @@ int malocar(celula *pcel) {
 	
 	//asigno mem a celula
 	if (!newseg) REC_error(MAL_ERROR);
-	pcel->mem=newseg;	
 	
 	REC_memory_free(total_free());
-	return 1;
+	return newseg;
 	
 }
 

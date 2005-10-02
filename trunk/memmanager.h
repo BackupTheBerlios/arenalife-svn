@@ -4,6 +4,9 @@
 #include <glib.h>
 #include "celula.h"
 
+#define SOUP_SIZE 70000 //bytes
+#define PROP_FREE 30 //porcentaje que el cleaner mantiene libre en la soup
+
 typedef struct memmanager memmanager;
 typedef struct segment segment;
 
@@ -13,13 +16,13 @@ struct memmanager {
 	GList *free_heap;
 	GList *used_heap;
 	char *soup;	
-	int (*malocar)(celula*);
+	segment* (*malocar)(int csize);
 	int (*load_cel)(char*, celula*);
 	void (*init_heap)(void);
 	void (*show_free_heap)(void);
 	void (*show_used_heap)(void);
 	void (*assert_mem)(void);
-	int (*liberar)(celula *pcel);
+	int (*liberar)(segment *pmem);
 	void (*defrag)(void);
 	int (*enough_free)(void);
 	int (*total_free)(void);
@@ -36,13 +39,14 @@ struct segment {
 char get_byte(int);
 int memsize (void);
 int set_byte(cpu*);
-int liberar(celula *pcel);
+int liberar(segment *pmem);
 void defrag (void);
 void init_heap(void);
 void assert_mem(void);
 int total_free(void);
 memmanager* memmanager_get(void);
-int malocar(celula*);
+void memmanager_reset(void);
+segment* malocar(int csize);
 int load_cel(char*, celula*);
 void show_free_heap(void);
 void show_used_heap(void);

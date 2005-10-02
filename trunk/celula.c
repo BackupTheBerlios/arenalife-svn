@@ -52,14 +52,14 @@ void die(celula *pthis) {
 	free(pthis->pcpu);	
 	
 	/* Libera el segmento alocado */
-	mman->liberar(pthis);
+	mman->liberar(pthis->mem);
 
 	/* ME LIBERO A MI MISMA!!!!!!! */
 	free(pthis);
 }
 
 int put_in_soup(celula *pcel) {
-	if (malocar(pcel))
+	if ((pcel->mem = malocar(pcel->size)))
 		return 1;
 	else 
 		return 0;
@@ -113,7 +113,7 @@ int load_from_bytes (celula *pthis, char *insts, int len) {
 	//for (i=0;i<len;i++)
 	//	printf("inst %d: %s\n",i,decodificar(*(insts+i)));
 	pthis->size=len;
-	while (!mman->malocar(pthis));
+	while (!(pthis->mem = mman->malocar(pthis->size)));
 
 	mman->load_cel(insts, pthis);
 	return 1;	
@@ -129,7 +129,7 @@ int load_from_file(celula *pthis, char *filename) {
 	
 	pthis->size = genome_size(idecoded_insts);	
 	
-	if (!mman->malocar(pthis))	
+	if (!(pthis->mem = mman->malocar(pthis->size)))	
 		return 0;
 	
 	// paso a binario mi lista de insts. 	
