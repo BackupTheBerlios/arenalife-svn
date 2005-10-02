@@ -1,0 +1,69 @@
+nop1
+nop1
+divide
+not0
+adrb
+nop0
+nop0
+movab
+nop0
+sub_ac
+movab
+adrf
+nop0
+nop0
+nop0
+inc_a
+sub_ab
+nop1
+nop1
+nop0
+nop1
+mal ; guarda el inicio del hijo en ax
+call ; falla siempre
+nop0
+nop1
+nop0
+nop0
+nop0
+pushbx
+nop0
+ifz
+nop1
+nop1
+nop0
+nop0
+pushax
+pushbx
+pushcx
+nop1 ; inicio copy loop
+nop0
+nop1
+nop0
+movii
+dec_c
+ifz
+jmp ; se dirige al final ...
+nop1
+nop0
+nop0
+inc_a
+inc_b
+jmp
+nop0 ; fin copy loop
+nop1
+nop0
+nop1
+ifz
+nop1
+nop0 ; viene aca luego de terminar el copy loop
+nop1
+nop1
+popcx
+popbx
+inc_b
+ret ; pone en IP el valor de la pila, que es ax, o sea el final del parasito ó hijo = el principio mio? 
+nop1
+nop1
+nop1
+nop0

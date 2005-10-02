@@ -1,0 +1,2 @@
+rm -rf gb/*
+./arena -a 0080aaa.tie -d gb/ -p 2402
