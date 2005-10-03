@@ -207,6 +207,9 @@ static char *itos(int val) {
       return(str);
 }
 
+//hola
+//holas
+
 static void IO_save_dom(GList *doms, int lastdom_cont) {
 	int filefd;
 	int i;
@@ -236,7 +239,7 @@ static void IO_save_dom(GList *doms, int lastdom_cont) {
 	write(filefd, gen_s, strlen(gen_s));
 	for (i=0;i<(int)g_list_length(doms);i++) {
 		dom = (clase_cel*)g_list_nth_data(doms,i);
-		prop_i=(int)100*(((float)(dom->genome_size*dom->cantidad))/(float)pthis->memtotal);
+		prop_i=(int)(100.0*(((float)(dom->genome_size*dom->cantidad))/(float)pthis->memtotal));
 		//prop_i = dom->cantidad;	
 		if (prop_i==0) prop_i=1;
 		size = itos(dom->genome_size);
