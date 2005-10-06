@@ -50,7 +50,7 @@ void init_heap () {
 	free->inicio = 0;
 	free->fin = SOUP_SIZE-1;
 	free->size = SOUP_SIZE;
-	pthis->free_heap = g_list_append(pthis->free_heap, free);	
+	pthis->free_heap = g_slist_append(pthis->free_heap, free);	
 }
 
 static gint seg_comp (gconstpointer a, gconstpointer b) {
@@ -109,16 +109,16 @@ void defrag() {
 	int i, total;
 	segment *pseg, *psegnext;
 	
-	pthis->free_heap = g_list_sort(pthis->free_heap, seg_comp);
+	pthis->free_heap = g_slist_sort(pthis->free_heap, seg_comp);
 
-	total = g_list_length(pthis->free_heap);
+	total = g_slist_length(pthis->free_heap);
 	for (i=0;i<total-1;i++) {
-		pseg=(segment *)g_list_nth_data(pthis->free_heap, i);
-		psegnext=(segment *)g_list_nth_data(pthis->free_heap, i+1);
+		pseg=(segment *)g_slist_nth_data(pthis->free_heap, i);
+		psegnext=(segment *)g_slist_nth_data(pthis->free_heap, i+1);
 		if ((pseg->fin+1) == psegnext->inicio) {
 			pseg->fin = psegnext->fin;
 			pseg->size += psegnext->size;
-		       	pthis->free_heap = g_list_remove(pthis->free_heap, psegnext);	
+		       	pthis->free_heap = g_slist_remove(pthis->free_heap, psegnext);	
 			total-=1;
 			free(psegnext);
 		} /*else {
@@ -126,13 +126,13 @@ void defrag() {
 			l.inf = (pseg->fin);
 			l.sup = (psegnext->inicio);
 			// si hay hueco, uno los segmentos 
-			if (!g_list_find_custom(pthis->used_heap, (gpointer)&l,inter_find)) {
+			if (!g_slist_find_custom(pthis->used_heap, (gpointer)&l,inter_find)) {
 				//print_elem(pseg, stdout);
 				//print_elem(psegnext, stdout);
 				pseg->size += psegnext->size;
 				pseg->fin +=psegnext->size;
 				//print_elem(pseg, stdout);
-		       		pthis->free_heap = g_list_remove(pthis->free_heap, psegnext);	
+		       		pthis->free_heap = g_slist_remove(pthis->free_heap, psegnext);	
 				//assert(0);
 			}
 			//free(&l);	
@@ -144,8 +144,8 @@ int liberar(segment *pmem) {
 	memmanager *pthis = memmanager_get();
 	if (pmem!=NULL) {
 		pthis->free+=(pmem)->size;
-		pthis->free_heap = g_list_insert_sorted(pthis->free_heap, pmem,seg_comp);
-		pthis->used_heap = g_list_remove(pthis->used_heap, pmem);
+		pthis->free_heap = g_slist_insert_sorted(pthis->free_heap, pmem,seg_comp);
+		pthis->used_heap = g_slist_remove(pthis->used_heap, pmem);
 	}
 	else {
 		REC_error(SEG_NULL);
@@ -161,7 +161,7 @@ static pthread_mutex_t maloc;
 segment* malocar(int csize) {
 	memmanager *pthis = memmanager_get();
 	int i;
-	GList *l = NULL;
+	GSList *l = NULL;
 	segment *freeseg = NULL;
 	segment *newseg;
 	
@@ -170,19 +170,19 @@ segment* malocar(int csize) {
 	pthread_mutex_lock(&maloc);
 	
 	/* tomo el primer segmento libre */
-	if (g_list_length(pthis->free_heap)==0) { 
+	if (g_slist_length(pthis->free_heap)==0) { 
 		pthread_mutex_unlock(&maloc);
 		return 0;
 	}
 
 
 	/* FIRST FIT */
-	l = g_list_nth(pthis->free_heap, 0);
+	l = g_slist_nth(pthis->free_heap, 0);
 	freeseg = (segment *)l->data; 
 	
 	/* sigo buscando sino encuentro un segmento donde quepa la celula */
 	for (i=1; (csize > freeseg->size) ;i++) {
-		l = g_list_nth(pthis->free_heap, i);
+		l = g_slist_nth(pthis->free_heap, i);
 		if (l==NULL) break;
 		freeseg = (segment *)l->data; 
 	}
@@ -203,7 +203,7 @@ segment* malocar(int csize) {
 	freeseg->size -= csize;
 	
 	if (freeseg->size == 0) {
-		pthis->free_heap = g_list_remove(pthis->free_heap, freeseg);
+		pthis->free_heap = g_slist_remove(pthis->free_heap, freeseg);
 		free(freeseg);
 	}	
 	if (freeseg->size < 0) {
@@ -212,7 +212,7 @@ segment* malocar(int csize) {
 	}	
 	freeseg->inicio += csize; 	
 		
-	pthis->used_heap = g_list_append(pthis->used_heap,newseg);
+	pthis->used_heap = g_slist_append(pthis->used_heap,newseg);
 	
 	
 	pthis->free-=newseg->size;
@@ -253,14 +253,14 @@ static void print_elem(gpointer p, gpointer u_data) {
 	fprintf(f, "Fin:%d\n", seg->fin);
 }
 
-static void show_heap(GList *l) {
-	g_list_foreach(l, print_elem, stdout);	
+static void show_heap(GSList *l) {
+	g_slist_foreach(l, print_elem, stdout);	
 }
 
 void assert_mem() {
 	memmanager *pthis = memmanager_get();
-	g_list_foreach(pthis->free_heap, assert_seg, stdout);	
-	g_list_foreach(pthis->used_heap, assert_seg, stdout);		
+	g_slist_foreach(pthis->free_heap, assert_seg, stdout);	
+	g_slist_foreach(pthis->used_heap, assert_seg, stdout);		
 }
 
 void show_free_heap() {

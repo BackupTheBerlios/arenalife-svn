@@ -11,7 +11,7 @@
 #include "estadistica.h"
 
 /* lista de genomas autoreplicables */
-static GList *genomas[MAX_CLASS];
+static GSList *genomas[MAX_CLASS];
 
 static gint genoma_find(gconstpointer a, gconstpointer pthis) {
 	clase_genoma *t = ((clase_genoma*)pthis);	
@@ -26,12 +26,12 @@ static gint genoma_find(gconstpointer a, gconstpointer pthis) {
 
 static char * get_filename(gconstpointer c) {
 	int i,j;
-	GList *clase = (GList*)c;
+	GSList *clase = (GSList*)c;
 	// LIBERAR! LIBERAR!
 	char *ext=malloc(4);
 	memset(ext,0,4);
 	memset(ext,'a',3);
-	for (i=0;i<g_list_length(clase)-1;i++) {
+	for (i=0;i<g_slist_length(clase)-1;i++) {
 		for(j=2;j>-1;j--) {
 			if (*(ext+j)=='z') {
 				if (j==0) goto fin;
@@ -57,9 +57,9 @@ int GB_newclone(char *genoma, int size) {
 	newgeno->size = size;
 	newgeno->genoma = genoma;
 	pthread_mutex_lock(&newclone_t);
-	if (!g_list_find_custom(genomas[size], newgeno, genoma_find)) {
+	if (!g_slist_find_custom(genomas[size], newgeno, genoma_find)) {
 		//NUEVO GENOMA
-		genomas[size] = g_list_append(genomas[size], newgeno);	
+		genomas[size] = g_slist_append(genomas[size], newgeno);	
 		ext = get_filename(genomas[size]); 
 		if (ext) {
 			filename = IO_save_genoma(newgeno->genoma,newgeno->size, ext);

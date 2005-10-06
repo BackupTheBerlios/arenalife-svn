@@ -13,8 +13,8 @@ typedef struct segment segment;
 struct memmanager {
 	int total;
 	int free;
-	GList *free_heap;
-	GList *used_heap;
+	GSList *free_heap;
+	GSList *used_heap;
 	char *soup;	
 	segment* (*malocar)(int csize);
 	int (*load_cel)(char*, celula*);

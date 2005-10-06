@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
 	char buffer[MAX_SIZE];
 	int nread;
 	unsigned short port;
-	GList *GLinsts;
+	GSList *GLinsts;
 	char *insts;
 
 	/* Verifico el nro de argumentos */

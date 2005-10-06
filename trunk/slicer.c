@@ -11,9 +11,9 @@
 
 #define DEBUG_SLI
 
-static GList *slicer_list = NULL;
-static GList *cleaner_list = NULL;
-static GList *nacidos_list = NULL;
+static GSList *slicer_list = NULL;
+static GSList *cleaner_list = NULL;
+static GSList *nacidos_list = NULL;
 
 static slicer *the_slicer = NULL; //no puedo hacer extern ... desde otro modulo
 
@@ -57,9 +57,9 @@ slicer* slicer_get(void) {
 
 int remover_celula(celula *pcel) {
 	slicer *pthis = slicer_get();
-	if (g_list_find(slicer_list, pcel)) {
-		slicer_list=g_list_remove(slicer_list, pcel);
-		cleaner_list=g_list_remove(cleaner_list, pcel);
+	if (g_slist_find(slicer_list, pcel)) {
+		slicer_list=g_slist_remove(slicer_list, pcel);
+		cleaner_list=g_slist_remove(cleaner_list, pcel);
 		pcel->die(pcel);
 		REC_cel_eliminada(pcel->size);
 	} 
@@ -73,7 +73,7 @@ int remover_celula(celula *pcel) {
 
 static celula* next_tobe_cleaned (void) {
 	celula *pcel=NULL;
-	pcel = g_list_nth_data(cleaner_list,0);
+	pcel = g_slist_nth_data(cleaner_list,0);
 	
 	if (pcel == NULL) {
 		return NULL; //no more cels
@@ -99,7 +99,7 @@ int cleaner(void) {
 }
 
 int get_total() {
-	return g_list_length(slicer_list);
+	return g_slist_length(slicer_list);
 }
 
 
@@ -123,7 +123,7 @@ int crear_hijo(celula *pcel) {
 }
 
 void dividir(celula *pcel) {
-	g_list_append(nacidos_list, pcel);
+	g_slist_append(nacidos_list, pcel);
 }
 
 celula * create_celula_from_bytes(char *genoma, int len) {
@@ -214,7 +214,7 @@ int give_slice() {
 	slicer *pthis = slicer_get();
 
 	/* si no hay celulas, espero a que alguien inyecte */
-	if (g_list_length(slicer_list)<1) {
+	if (g_slist_length(slicer_list)<1) {
 		pthread_mutex_lock(&pthis->wait_m);
 		pthread_cond_wait(&pthis->wait_c, &pthis->wait_m);
 		pthread_mutex_unlock(&pthis->wait_m);
@@ -223,15 +223,15 @@ int give_slice() {
 	pthis->cont_hilos=0;
        
         // para cada celula...	
-	g_list_foreach(slicer_list, cel_time, NULL);
+	g_slist_foreach(slicer_list, cel_time, NULL);
 #ifdef MT
 	// si hay hilos corriendo...
 	if (pthis->cont_hilos > 0)
 		wait_threads();
 
 	// si hay por nacer...
-	//g_list_foreach(nacidos_list,born, NULL);
-	//g_list_free(nacidos_list);
+	//g_slist_foreach(nacidos_list,born, NULL);
+	//g_slist_free(nacidos_list);
 	//nacidos_list=NULL;
 #endif
 	return 1;	
@@ -247,9 +247,9 @@ int get_cel_slices(celula* pcel) {
 
 	//slices= (int)pow((double)pcel->size, exp);
 	
-	//slices=20;
+	slices=20;
 	
-	slices = pcel->size;
+	//slices = pcel->size;
 
 	if (slices<1)
 		slices=1;	
@@ -271,7 +271,7 @@ static gint pvida_comp (gconstpointer a, gconstpointer b) {
 /* las celulas que produjeron algun error o vivieron mucho reducen su pvida,
  *  por eso debo relistar para cambiar el orden */
 void relist(void) {
-	cleaner_list = g_list_sort(cleaner_list, pvida_comp);
+	cleaner_list = g_slist_sort(cleaner_list, pvida_comp);
 }
 
 pthread_mutex_t add_f;
@@ -279,14 +279,14 @@ void add (celula* cel) {
 	assert(cel->size);
 	REC_cel_creada(cel->size);
 	
-	GList *lpadre = NULL;
+	GSList *lpadre = NULL;
 	pthread_mutex_lock(&add_f);
-	lpadre = g_list_find(slicer_list, cel->padre);
+	lpadre = g_slist_find(slicer_list, cel->padre);
 	if (lpadre==NULL) {
-		slicer_list= g_list_append(slicer_list,cel);
+		slicer_list= g_slist_append(slicer_list,cel);
 	} else	
-		slicer_list=g_list_insert_before(slicer_list, lpadre ,cel);
-	cleaner_list= g_list_append(cleaner_list,cel);
+		slicer_list=g_slist_insert_before(slicer_list, lpadre ,cel);
+	cleaner_list= g_slist_append(cleaner_list,cel);
 	pthread_mutex_unlock(&add_f);
 }
 

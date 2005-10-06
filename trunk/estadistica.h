@@ -46,8 +46,8 @@ struct clase_error {
 
 
 int get_cant_clase(int clase);
-GList* get_clases(void);
-GList* get_errores(void);
+GSList* get_clases(void);
+GSList* get_errores(void);
 void REC_relist(void);
 void REC_cel_creada(int);
 void REC_cel_eliminada(int);

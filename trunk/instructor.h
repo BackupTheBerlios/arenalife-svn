@@ -12,10 +12,10 @@ struct instructions {
 };
 
 void IO_define_path(char *);
-GList *IO_fetch_insts(char *);
-char *codificar(GList *);
+GSList *IO_fetch_insts(char *);
+char *codificar(GSList *);
 char *decodificar(char);
-int genome_size(GList *);
+int genome_size(GSList *);
 char * IO_save_genoma(char *, int, char *);
 
 #endif

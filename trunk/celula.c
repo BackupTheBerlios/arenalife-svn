@@ -121,7 +121,7 @@ int load_from_bytes (celula *pthis, char *insts, int len) {
 
 int load_from_file(celula *pthis, char *filename) {
 	char* coded_insts;
-	GList* idecoded_insts;
+	GSList* idecoded_insts;
 	memmanager *mman = memmanager_get();
 
 	/* traigo una lista con las insts. sin encodear */	
@@ -138,8 +138,8 @@ int load_from_file(celula *pthis, char *filename) {
 	mman->load_cel(coded_insts, pthis);		
 	
 	// libero lo que use
-	g_list_foreach(idecoded_insts,lib,NULL);
-	g_list_free(idecoded_insts);	
+	g_slist_foreach(idecoded_insts,lib,NULL);
+	g_slist_free(idecoded_insts);	
 	free(coded_insts);
 
 	return 1;

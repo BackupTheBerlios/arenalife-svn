@@ -71,13 +71,13 @@ void IO_define_path(char *d) {
 	dir=dirl;
 }
 
-GList *IO_fetch_insts(char *filename) {
+GSList *IO_fetch_insts(char *filename) {
 
 	int i, ign, filefd;
 	int noteof=1;
 	char *inst=NULL;
 	char car;
-	GList *insts = NULL;
+	GSList *insts = NULL;
 		
 	if ((filefd = open(filename, O_RDONLY)) == -1) { 
 		perror("open");
@@ -106,7 +106,7 @@ GList *IO_fetch_insts(char *filename) {
 				free(inst);	
 				break;
 			}
-			insts = g_list_append(insts, inst);
+			insts = g_slist_append(insts, inst);
 		}
 	}
 	close(filefd);
@@ -200,11 +200,11 @@ fin:
 }
 
 
-char *codificar(GList *idecoded_insts) {
+char *codificar(GSList *idecoded_insts) {
 	char *coded_insts = (char*)malloc(MAX_GENOME);
 	memset(coded_insts, 0, MAX_INST_SIZE);
 	
-	g_list_foreach(idecoded_insts, each_inst, coded_insts);
+	g_slist_foreach(idecoded_insts, each_inst, coded_insts);
 	c=0;
 
 	return coded_insts;
@@ -221,6 +221,6 @@ char *decodificar(char coded_inst) {
 	return "";
 }
 
-int genome_size(GList *decoded_insts) {
-	return g_list_length(decoded_insts);
+int genome_size(GSList *decoded_insts) {
+	return g_slist_length(decoded_insts);
 }

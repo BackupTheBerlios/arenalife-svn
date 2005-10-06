@@ -80,6 +80,6 @@ void render_loop(void) {
 	errores_cont=0;
 	clases_cont=0;
 	fact=1.0;
-	//g_list_foreach(get_errores(), each_error, NULL);
-	g_list_foreach(get_clases(), each_clase, NULL);
+	//g_slist_foreach(get_errores(), each_error, NULL);
+	g_slist_foreach(get_clases(), each_clase, NULL);
 }

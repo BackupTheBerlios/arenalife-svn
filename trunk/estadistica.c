@@ -11,8 +11,8 @@
 
 struct estadistica *pthis = NULL;
 
-GList *clases = NULL;
-GList *errores = NULL;
+GSList *clases = NULL;
+GSList *errores = NULL;
 
 static int clase_comp (gconstpointer elem, gconstpointer clase) {
 	struct clase_cel *pclase = (struct clase_cel *)elem;
@@ -39,26 +39,26 @@ static gint sort_func (gconstpointer a, gconstpointer b) {
 }
 
 void REC_relist(void) {
-	clases = g_list_sort(clases, sort_func);
+	clases = g_slist_sort(clases, sort_func);
 }
 
 pthread_mutex_t mutex1;
 void REC_cel_creada(int clase) {
-	GList *plist;
+	GSList *plist;
 	struct clase_cel *pclase;
 	pthread_mutex_lock(&mutex1);
 	pthis->ncels++;
 	pthis->inc_cels++;
-	if ((plist = g_list_find_custom(clases, (gpointer)clase, clase_comp))) {
+	if ((plist = g_slist_find_custom(clases, (gpointer)clase, clase_comp))) {
 		pclase = (struct clase_cel *)plist->data;
 		pclase->cantidad++;
 	}
 	else {
 	
-		/*if (g_list_length(clases)>10) {
-			pclase = (struct clase_cel*)((g_list_last(clases))->data);
+		/*if (g_slist_length(clases)>10) {
+			pclase = (struct clase_cel*)((g_slist_last(clases))->data);
 			//if (pclase->cantidad==0) {
-				clases = g_list_remove(clases, pclase);
+				clases = g_slist_remove(clases, pclase);
 				pthread_mutex_unlock(&mutex1);
 				return;
 			//}
@@ -67,8 +67,8 @@ void REC_cel_creada(int clase) {
 		pclase = (clase_cel*)malloc(sizeof(*pclase));
 		pclase->genome_size = clase;
 		pclase->cantidad=1;
-		clases = g_list_append(clases, pclase);
-		//clases = g_list_insert_sorted(clases, pclase, sort_func);
+		clases = g_slist_append(clases, pclase);
+		//clases = g_slist_insert_sorted(clases, pclase, sort_func);
 	}
 	//printf("clase %d, cant: %d\n",pclase->genome_size, pclase->cantidad);
 	pthread_mutex_unlock(&mutex1);
@@ -76,10 +76,10 @@ void REC_cel_creada(int clase) {
 
 pthread_mutex_t mutex2;
 void REC_cel_eliminada(int clase){
-	GList *plist;
+	GSList *plist;
 	struct clase_cel *pclase;
 	pthread_mutex_lock(&mutex2);
-	if ((plist = g_list_find_custom(clases, (gpointer)clase, clase_comp))) {
+	if ((plist = g_slist_find_custom(clases, (gpointer)clase, clase_comp))) {
 		pclase = (struct clase_cel *)plist->data;
 		pclase->cantidad--;
 		if (pclase->cantidad<0) {
@@ -94,9 +94,9 @@ void REC_cel_eliminada(int clase){
 }
 
 int get_cant_clase(int clase) {
-	GList *plist;
+	GSList *plist;
 	struct clase_cel *pclase;
-	if ((plist = g_list_find_custom(clases, (gpointer)clase, clase_comp))) {
+	if ((plist = g_slist_find_custom(clases, (gpointer)clase, clase_comp))) {
 		return pclase->cantidad;	
 	}
 	else
@@ -108,11 +108,11 @@ void REC_saved_genoma(char *genoma) {
 	strncpy(pthis->last_saved_genoma,genoma,20);
 }
 
-GList* get_clases(void) {
+GSList* get_clases(void) {
 	return clases;
 }
 
-GList* get_errores(void) {
+GSList* get_errores(void) {
 	return errores;
 }
 
@@ -129,11 +129,11 @@ static int error_comp (gconstpointer elem, gconstpointer clase) {
 
 pthread_mutex_t mutex3;
 void REC_error(int tipo) {
-	GList *plist;
+	GSList *plist;
 	struct clase_error *pclase;
 	pthread_mutex_lock(&mutex3);
 	pthis->seg_faults++;
-	if ((plist = g_list_find_custom(errores, (gpointer)tipo, error_comp))) {
+	if ((plist = g_slist_find_custom(errores, (gpointer)tipo, error_comp))) {
 		pclase = (struct clase_error *)plist->data;
 		pclase->cantidad++;
 	}
@@ -141,7 +141,7 @@ void REC_error(int tipo) {
 		pclase = (struct clase_error*)malloc(sizeof(*pclase));
 		pclase->tipo = tipo;
 		pclase->cantidad=1;
-		errores = g_list_append(errores, pclase);
+		errores = g_slist_append(errores, pclase);
 	}
 	pthread_mutex_unlock(&mutex3);
 }
@@ -210,7 +210,7 @@ static char *itos(int val) {
 //hola
 //holas
 
-static void IO_save_dom(GList *doms, int lastdom_cont) {
+static void IO_save_dom(GSList *doms, int lastdom_cont) {
 	int filefd;
 	int i;
 	int prop_i;
@@ -237,8 +237,8 @@ static void IO_save_dom(GList *doms, int lastdom_cont) {
 	
 	gen_s=itos(pthis->generacion);
 	write(filefd, gen_s, strlen(gen_s));
-	for (i=0;i<(int)g_list_length(doms);i++) {
-		dom = (clase_cel*)g_list_nth_data(doms,i);
+	for (i=0;i<(int)g_slist_length(doms);i++) {
+		dom = (clase_cel*)g_slist_nth_data(doms,i);
 		prop_i=(int)(100.0*(((float)(dom->genome_size*dom->cantidad))/(float)pthis->memtotal));
 		//prop_i = dom->cantidad;	
 		if (prop_i==0) prop_i=1;
@@ -258,23 +258,23 @@ static void IO_save_dom(GList *doms, int lastdom_cont) {
 
 static void REC_save_dominante(void) {
 	int i;
-	GList *doms = NULL;
+	GSList *doms = NULL;
 	gpointer t = NULL;
 	int cont = pthis->last_dom_cont;
 	for (i=0;i<N_DOMINANTES;i++) {
-		t = g_list_nth_data(clases,i);
+		t = g_slist_nth_data(clases,i);
 		if (t!=NULL)
-			doms = g_list_append(doms,t);
+			doms = g_slist_append(doms,t);
 		t=NULL;
 	}
-	if (g_list_nth_data(clases,0)==pthis->last_dom) {
+	if (g_slist_nth_data(clases,0)==pthis->last_dom) {
 		pthis->last_dom_cont++;
 		cont=0; //mientras se mantenga el lider, no guardo.
 	} else { /*cambio de lider*/
 		pthis->last_dom_cont=1;
 	}
 	IO_save_dom(doms, cont);
-	pthis->last_dom = (clase_cel*)g_list_nth_data(clases, 0);
+	pthis->last_dom = (clase_cel*)g_slist_nth_data(clases, 0);
 }
 
 void REC_reset_ronda(void){

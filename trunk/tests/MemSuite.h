@@ -67,10 +67,10 @@ class MemSuite : public CxxTest::TestSuite
 		for (i=0; i<cant; i++) {
 			TS_ASSERT(segs[i] = mman->malocar(size));
 		}
+		TS_ASSERT_EQUALS(0, mman->total_free());
 		for (i=0; i<cant; i++) {
 			TS_ASSERT(mman->liberar(segs[i]));
 		}
 		TS_ASSERT_EQUALS(mman->total_free(), SOUP_SIZE);
 	}
-	
 };
