@@ -178,15 +178,6 @@ static void wait_threads(void) {
 		pthread_join(pthis->tid[i],NULL);
 	pthis->cont_hilos=0;
 }
-/*
-static void born(gpointer c, gpointer nada) {
-	celula *pcel = (celula *)c;
-	while (!put_in_soup(pcel)) {
-		cleaner();
-	}
-	crear_hijo(pcel);	
-}
-*/
 #endif
 
 /* para cada celula en la ronda ... */

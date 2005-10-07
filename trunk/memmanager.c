@@ -82,27 +82,6 @@ int enough_free() {
 		return 0;	
 }
 
-/*
-struct limits {
-	int inf;
-	int sup;
-};
-
-static void print_elem(gpointer p, gpointer u_data);
-
-gint inter_find(gconstpointer a, gconstpointer userdata) {
-	struct limits *lims = (struct limits*)userdata;
-	segment *seg = (segment *)a;
-	// si encuentro un hueco...
-	//printf("lim inf:%d\n",lims->inf);
-	//printf("lim sup:%d\n\n",lims->sup);
-	if (lims->inf < seg->inicio && lims->sup > seg->inicio)
-		return 0;
-	else	
-		return 1;
-}
-*/
-
 /* busca segmentos contiguos y los une en 1 solo segmento */
 void defrag() {
 	memmanager *pthis = memmanager_get();
@@ -121,22 +100,7 @@ void defrag() {
 		       	pthis->free_heap = g_slist_remove(pthis->free_heap, psegnext);	
 			total-=1;
 			free(psegnext);
-		} /*else {
-			struct limits l;
-			l.inf = (pseg->fin);
-			l.sup = (psegnext->inicio);
-			// si hay hueco, uno los segmentos 
-			if (!g_slist_find_custom(pthis->used_heap, (gpointer)&l,inter_find)) {
-				//print_elem(pseg, stdout);
-				//print_elem(psegnext, stdout);
-				pseg->size += psegnext->size;
-				pseg->fin +=psegnext->size;
-				//print_elem(pseg, stdout);
-		       		pthis->free_heap = g_slist_remove(pthis->free_heap, psegnext);	
-				//assert(0);
-			}
-			//free(&l);	
-		}*/
+		}
 	}
 }
 

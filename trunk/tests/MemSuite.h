@@ -1,7 +1,10 @@
+//#include <iostream>
 #include <cxxtest/TestSuite.h>
+#include <glib.h>
 #include "../memmanager.h"
 #include "../estadistica.h"
 #include "../mutation.h"
+
 
 class MemSuite : public CxxTest::TestSuite 
 {
@@ -10,12 +13,31 @@ class MemSuite : public CxxTest::TestSuite
 		REC_reset();
 		memmanager_reset();
 	}
-		
+
+	void tearDown() {
+		memmanager *mman = memmanager_get();
+		g_slist_foreach(mman->free_heap, MemSuite::assertSegment, 0);
+        	g_slist_foreach(mman->used_heap, MemSuite::assertSegment, 0);	
+	}
+	
+	void testSingleton(void) {	
+		memmanager *mman1 = memmanager_get();
+		memmanager *mman2 = memmanager_get();
+        	TS_ASSERT_DIFFERS((int)mman1, 0);
+	        TS_ASSERT_DIFFERS((int)mman1, 0);
+		TS_ASSERT_EQUALS(mman1, mman2);
+	}
+	
 	void testInit(void) {
 		memmanager *mman = memmanager_get();
         	TS_ASSERT_EQUALS(mman->total_free(), SOUP_SIZE);
 	}
-
+	
+	static void assertSegment(gpointer p, gpointer u_data) {
+		segment *pseg = (segment *)p;
+		TS_ASSERT_EQUALS(pseg->fin - pseg->inicio + 1, pseg->size);
+	}
+	
 	void testMalocarNada(void) {
 		int size = 0;
 		memmanager *mman = memmanager_get();
