@@ -36,6 +36,12 @@ struct segment {
 	int size;
 };
 
+segment* segment_new(int inicio, int size);
+segment* segment_fit_search(int size);
+void segment_resize(segment *pseg, int size);
+
+
+
 char get_byte(int);
 int memsize (void);
 int set_byte(cpu*);

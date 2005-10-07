@@ -46,10 +46,7 @@ void memmanager_reset(void) {
 
 void init_heap () {
 	memmanager *pthis = memmanager_get();
-	segment *free = (segment*)malloc(sizeof(*free));
-	free->inicio = 0;
-	free->fin = SOUP_SIZE-1;
-	free->size = SOUP_SIZE;
+	segment *free = segment_new(0, SOUP_SIZE);
 	pthis->free_heap = g_slist_append(pthis->free_heap, free);	
 }
 
@@ -119,71 +116,33 @@ int liberar(segment *pmem) {
 	return 1;
 }
 
-/* Se mantiene una lista enlazada con los segmentos libres y otra con los segmentos ocupados. 
- * Devuelve 0 si no hay lugar, 1 si maloco bien. */
-static pthread_mutex_t maloc;
 segment* malocar(int csize) {
 	memmanager *pthis = memmanager_get();
-	int i;
-	GSList *l = NULL;
 	segment *freeseg = NULL;
 	segment *newseg;
 	
-
-	//MUTEX LOCK
-	pthread_mutex_lock(&maloc);
 	
-	/* tomo el primer segmento libre */
 	if (g_slist_length(pthis->free_heap)==0) { 
-		pthread_mutex_unlock(&maloc);
 		return 0;
 	}
-
 
 	/* FIRST FIT */
-	l = g_slist_nth(pthis->free_heap, 0);
-	freeseg = (segment *)l->data; 
 	
-	/* sigo buscando sino encuentro un segmento donde quepa la celula */
-	for (i=1; (csize > freeseg->size) ;i++) {
-		l = g_slist_nth(pthis->free_heap, i);
-		if (l==NULL) break;
-		freeseg = (segment *)l->data; 
-	}
-
-	/* si no encontre un segmento con espacio libre, retorno */
-	if (csize > freeseg->size) {
+	freeseg = segment_fit_search(csize);
+	
+	if (!freeseg) {
 		REC_error(MEM_FULL);
-		//MUTEX UNLOCK
-		pthread_mutex_unlock(&maloc);
-		return 0;
+		return 0;	
 	}
 	
-	newseg = (segment*)malloc(sizeof(*newseg));
-	newseg->inicio = freeseg->inicio;
-	newseg->fin = newseg->inicio + csize - 1; /*0+80-1=79*/
-	newseg->size = csize;
+	newseg = segment_new(freeseg->inicio, csize);
 	
-	freeseg->size -= csize;
+	segment_resize(freeseg, csize);
 	
-	if (freeseg->size == 0) {
-		pthis->free_heap = g_slist_remove(pthis->free_heap, freeseg);
-		free(freeseg);
-	}	
-	if (freeseg->size < 0) {
-		REC_error(MEM_DESBORD);
-		assert(0);
-	}	
-	freeseg->inicio += csize; 	
-		
 	pthis->used_heap = g_slist_append(pthis->used_heap,newseg);
 	
-	
-	pthis->free-=newseg->size;
+	pthis->free -= newseg->size;
 
-	//MUTEX UNLOCK
-	pthread_mutex_unlock(&maloc);
-	
 	//asigno mem a celula
 	if (!newseg) REC_error(MAL_ERROR);
 	
@@ -193,8 +152,6 @@ segment* malocar(int csize) {
 }
 
 static void assert_seg(gpointer p, gpointer u_data) {	
-	//if (rand()>(RAND_MAX - RAND_MAX/400000))
-	//	ui_drawi(25,3,rand());
 	segment *pseg = (segment *)p;
 	int a;
 	if (pseg) {
@@ -250,7 +207,7 @@ int load_cel(char *coded_insts, celula *pcel) {
 
 /* autorizo a escribir solo si:
  * 1 - Es el espacio de la misma celula 
- * 2 - Es el espacio del hijo todavia no indepentiente
+ * 2 - Es el espacio del hijo todavia no independiente
  * */
 int auth_w(cpu *pcpu) {
 	segment *seg = NULL;
@@ -317,4 +274,46 @@ void soup_mutate(void) {
 		int pos = my_rand(0, memsize()-1);
 		*(mman->soup + pos) = my_rand(0,31);
 	}
+}
+
+segment* segment_new(int inicio, int size) {
+	segment *pthis = (segment*)malloc(sizeof(*pthis));
+	pthis->inicio = inicio;
+	pthis->size = size;
+	pthis->fin = inicio + size - 1;
+	return pthis;
+}
+
+static int segment_fit (gconstpointer elem, gconstpointer val) {
+	segment *pseg = (segment*)elem;
+	int size = (int) val;
+	if (pseg->size >= size)
+		return 0;
+	else
+		return 1;	
+}
+
+segment* segment_fit_search(int size) {
+	segment *pseg = 0;
+	GSList *l = NULL;
+	memmanager *mman = memmanager_get();
+	
+	l = g_slist_find_custom(mman->free_heap, (gpointer)size, segment_fit);
+	if (l)
+		pseg = (segment*)l->data;
+	
+	return pseg;
+
+}
+
+void segment_resize(segment *pseg, int size) {
+	memmanager *pthis = memmanager_get();
+	pseg->size -= size;
+	
+	if (pseg->size == 0) {
+		pthis->free_heap = g_slist_remove(pthis->free_heap, pseg);
+		free(pseg);
+		return;
+	}	
+	pseg->inicio += size; 	
 }
