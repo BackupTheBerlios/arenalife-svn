@@ -446,15 +446,15 @@ static void mal(cpu *pcpu) {
 		
 			//phijo->allocated = 1;
 			
-			//si no puedo malocar, limpio
-			/*while (!malocar(phijo)) {
+			//si no puedo Vmalloc, limpio
+			/*while (!Vmalloc(phijo)) {
 				cleaner();
 			}
 			pcpu->ax = (phijo->mem)->inicio;
 			phijo->pcpu->ip = pcpu->ax;
 			(pcpu->pcel)->hijo = phijo;
 			*/
-			if (malocar(phijo)) {
+			if (Vmalloc(phijo)) {
 				pcpu->ax = (phijo->mem)->inicio;
 				phijo->pcpu->ip = pcpu->ax;
 				(pcpu->pcel)->hijo = phijo;

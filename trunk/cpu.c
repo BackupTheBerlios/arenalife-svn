@@ -414,7 +414,7 @@ static void mal(cpu *pcpu) {
 			phijo->size = pcpu->cx;
 			//printf("%d\n",phijo->size);
 			//pthread_mutex_lock(&maloc);
-			if ((phijo->mem = malocar(phijo->size))) {
+			if ((phijo->mem = Vmalloc(phijo->size))) {
 				pcpu->ax = (phijo->mem)->inicio;
 				phijo->pcpu->ip = pcpu->ax;
 				(pcpu->pcel)->hijo = phijo;

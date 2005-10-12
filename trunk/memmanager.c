@@ -18,8 +18,8 @@ static void memmanager_const(memmanager *pthis) {
 	pthis->soup = (char*)malloc(SOUP_SIZE+1);
 	memset(pthis->soup, 0, SOUP_SIZE+1);
 	pthis->soup_mutate = &soup_mutate;
-	pthis->malocar = &malocar;
-	pthis->liberar = &liberar;
+	pthis->Vmalloc = &Vmalloc;
+	pthis->Vfree = &Vfree;
 	pthis->total_free = &total_free;
 	pthis->init_heap = &init_heap;
 	pthis->enough_free = &enough_free;
@@ -85,7 +85,7 @@ void defrag() {
 	int i, total;
 	segment *pseg, *psegnext;
 	
-	pthis->free_heap = g_slist_sort(pthis->free_heap, seg_comp);
+	//pthis->free_heap = g_slist_sort(pthis->free_heap, seg_comp);
 
 	total = g_slist_length(pthis->free_heap);
 	for (i=0;i<total-1;i++) {
@@ -101,7 +101,7 @@ void defrag() {
 	}
 }
 
-int liberar(segment *pmem) {
+void Vfree(segment *pmem) {
 	memmanager *pthis = memmanager_get();
 	if (pmem!=NULL) {
 		pthis->free+=(pmem)->size;
@@ -110,13 +110,12 @@ int liberar(segment *pmem) {
 	}
 	else {
 		REC_error(SEG_NULL);
-		return 0;
+		return;
 	}
 	REC_memory_free(total_free());
-	return 1;
 }
 
-segment* malocar(int csize) {
+segment* Vmalloc(unsigned int csize) {
 	memmanager *pthis = memmanager_get();
 	segment *freeseg = NULL;
 	segment *newseg;
@@ -128,26 +127,26 @@ segment* malocar(int csize) {
 
 	/* FIRST FIT */
 	
-	freeseg = segment_fit_search(csize);
+	if ((freeseg = segment_fit_search(csize))) {
 	
-	if (!freeseg) {
+		newseg = segment_new(freeseg->inicio, csize);
+		
+		segment_resize(freeseg, csize);
+		
+		pthis->used_heap = g_slist_append(pthis->used_heap,newseg);
+	
+		pthis->free -= newseg->size;
+
+		//asigno mem a celula
+		if (!newseg) REC_error(MAL_ERROR);
+	
+		REC_memory_free(total_free());
+		return newseg;
+	
+	} else {
 		REC_error(MEM_FULL);
 		return 0;	
 	}
-	
-	newseg = segment_new(freeseg->inicio, csize);
-	
-	segment_resize(freeseg, csize);
-	
-	pthis->used_heap = g_slist_append(pthis->used_heap,newseg);
-	
-	pthis->free -= newseg->size;
-
-	//asigno mem a celula
-	if (!newseg) REC_error(MAL_ERROR);
-	
-	REC_memory_free(total_free());
-	return newseg;
 	
 }
 
@@ -213,13 +212,13 @@ int auth_w(cpu *pcpu) {
 	segment *seg = NULL;
 	celula *pcel = pcpu->pcel;	
 	
-	if ((pcpu->bx >= (pcel->mem)->inicio) && (pcpu->bx <= (pcel->mem)->fin)) {
+	if ((pcpu->bx >= (int)(pcel->mem)->inicio) && (pcpu->bx <= (int)(pcel->mem)->fin)) {
 		return 1;
 	}
 	if (pcel->hijo) {
 		if ((pcel->hijo)->indep == 0) {
 			seg = ((pcel->hijo)->mem);
-			if (pcpu->ax >= seg->inicio && pcpu->ax <= seg->fin)
+			if (pcpu->ax >= (int)seg->inicio && pcpu->ax <= (int)seg->fin)
 				return 1;
 		}
 	}
@@ -249,7 +248,7 @@ int set_byte(cpu *pcpu) {
 /* Solo puedo ejecutar la division si estoy en mi propio espacio */
 int auth_divide(cpu *pcpu) {
 	celula *pcel = pcpu->pcel;
-	if ((pcpu->ip >= (pcel->mem)->inicio) && (pcpu->ip <= (pcel->mem)->fin)) {
+	if ((pcpu->ip >= (int)(pcel->mem)->inicio) && (pcpu->ip <= (int)(pcel->mem)->fin)) {
 		return 1;
 	}
 	else
@@ -286,14 +285,14 @@ segment* segment_new(int inicio, int size) {
 
 static int segment_fit (gconstpointer elem, gconstpointer val) {
 	segment *pseg = (segment*)elem;
-	int size = (int) val;
+	unsigned int size = (unsigned int) val;
 	if (pseg->size >= size)
 		return 0;
 	else
 		return 1;	
 }
 
-segment* segment_fit_search(int size) {
+segment* segment_fit_search(unsigned int size) {
 	segment *pseg = 0;
 	GSList *l = NULL;
 	memmanager *mman = memmanager_get();

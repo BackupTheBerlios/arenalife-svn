@@ -33,4 +33,4 @@ runner.cpp: $(TEST_LIBS)
 	cxxtestgen.pl --error-printer -o $@ $^
 			
 clean: 
-	rm -f $(TARGETS) *.o core* *~ *.bak* runner runner.cpp
+	rm -f $(TARGETS) *.o core* *~ *.bak* gb/* runner runner.cpp
