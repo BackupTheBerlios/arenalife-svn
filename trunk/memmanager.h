@@ -7,6 +7,8 @@
 #define SOUP_SIZE 70000 //bytes
 #define PROP_FREE 30 //porcentaje que el cleaner mantiene libre en la soup
 
+#define EMALLOC -1
+
 typedef struct memmanager memmanager;
 typedef struct segment segment;
 
@@ -16,13 +18,13 @@ struct memmanager {
 	GSList *free_heap;
 	GSList *used_heap;
 	char *soup;	
-	segment* (*Vmalloc)(unsigned int csize);
+	int (*Vmalloc)(unsigned int size);
+	void (*Vfree)(unsigned int mem);
 	int (*load_cel)(char*, celula*);
 	void (*init_heap)(void);
 	void (*show_free_heap)(void);
 	void (*show_used_heap)(void);
 	void (*assert_mem)(void);
-	void (*Vfree)(segment *pmem);
 	void (*defrag)(void);
 	int (*enough_free)(void);
 	int (*total_free)(void);
@@ -44,14 +46,14 @@ void segment_resize(segment *pseg, int size);
 char get_byte(int);
 int memsize (void);
 int set_byte(cpu*);
-void Vfree(segment *pmem);
+int Vmalloc(unsigned int size);
+void Vfree(unsigned int mem);
 void defrag (void);
 void init_heap(void);
 void assert_mem(void);
 int total_free(void);
 memmanager* memmanager_get(void);
 void memmanager_reset(void);
-segment* Vmalloc(unsigned int csize);
 int load_cel(char*, celula*);
 void show_free_heap(void);
 void show_used_heap(void);

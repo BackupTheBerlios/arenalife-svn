@@ -29,7 +29,7 @@ static void celula_const(celula *cel) {
 	(cel->pcpu)->pcel = cel;
 
 	cel->save = &save;
-	cel->mem = NULL;
+	cel->mem = -1;
 	cel->hijo = NULL;
 	cel->padre = NULL;
 	cel->running=0;
@@ -59,7 +59,8 @@ void die(celula *pthis) {
 }
 
 int put_in_soup(celula *pcel) {
-	if ((pcel->mem = Vmalloc(pcel->size)))
+	pcel->mem = Vmalloc(pcel->size);
+	if (pcel->mem != EMALLOC)
 		return 1;
 	else 
 		return 0;
@@ -113,7 +114,8 @@ int load_from_bytes (celula *pthis, char *insts, int len) {
 	//for (i=0;i<len;i++)
 	//	printf("inst %d: %s\n",i,decodificar(*(insts+i)));
 	pthis->size=len;
-	while (!(pthis->mem = mman->Vmalloc(pthis->size)));
+	while (pthis->mem == EMALLOC)
+		pthis->mem = mman->Vmalloc(pthis->size);
 
 	mman->load_cel(insts, pthis);
 	return 1;	
@@ -128,8 +130,9 @@ int load_from_file(celula *pthis, char *filename) {
 	idecoded_insts = IO_fetch_insts(filename);
 	
 	pthis->size = genome_size(idecoded_insts);	
-	
-	if (!(pthis->mem = mman->Vmalloc(pthis->size)))	
+
+	pthis->mem = Vmalloc(pthis->size);	
+	if (pthis->mem == EMALLOC)	
 		return 0;
 	
 	// paso a binario mi lista de insts. 	
@@ -195,7 +198,7 @@ char* get_genoma (celula *pthis) {
 	char c;
 
 	for (i=0;i<pthis->size;i++) {
-		c = get_byte((pthis->mem)->inicio+i);		
+		c = get_byte(pthis->mem+i);		
 		*(genoma+i) = c;
 		//memcpy((genoma+i),&c,1);	
 	}

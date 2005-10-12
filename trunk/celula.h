@@ -17,8 +17,8 @@ struct celula {
 	int indep;
 	int ronda_hijos;
 
-	struct segment *mem; //espacio en memoria
-	
+	int mem; // espacio en memoria
+
 	long long int pvida;
 	int running;
 

@@ -101,12 +101,27 @@ void defrag() {
 	}
 }
 
-void Vfree(segment *pmem) {
+static int segment_find (gconstpointer elem, gconstpointer val) {
+	segment *pseg = (segment*)elem;
+	unsigned int inicio = (unsigned int) val;
+	if (pseg->inicio == inicio)
+		return 0;
+	else
+		return 1;	
+}
+
+void Vfree(unsigned int mem) {
 	memmanager *pthis = memmanager_get();
-	if (pmem!=NULL) {
-		pthis->free+=(pmem)->size;
-		pthis->free_heap = g_slist_insert_sorted(pthis->free_heap, pmem,seg_comp);
-		pthis->used_heap = g_slist_remove(pthis->used_heap, pmem);
+	segment *pseg = 0;
+	GSList *l = 0;
+	if (mem >= 0) {
+		l = g_slist_find_custom( pthis->used_heap, (gpointer)mem, segment_find); 
+		if (l) {
+			pseg = (segment*)l->data;
+			pthis->free+=(pseg)->size;
+			pthis->free_heap = g_slist_insert_sorted(pthis->free_heap, pseg,seg_comp);
+			pthis->used_heap = g_slist_remove(pthis->used_heap, pseg);
+		}
 	}
 	else {
 		REC_error(SEG_NULL);
@@ -115,14 +130,14 @@ void Vfree(segment *pmem) {
 	REC_memory_free(total_free());
 }
 
-segment* Vmalloc(unsigned int csize) {
+int Vmalloc(unsigned int csize) {
 	memmanager *pthis = memmanager_get();
 	segment *freeseg = NULL;
 	segment *newseg;
 	
 	
 	if (g_slist_length(pthis->free_heap)==0) { 
-		return 0;
+		return -1;
 	}
 
 	/* FIRST FIT */
@@ -141,11 +156,11 @@ segment* Vmalloc(unsigned int csize) {
 		if (!newseg) REC_error(MAL_ERROR);
 	
 		REC_memory_free(total_free());
-		return newseg;
+		return newseg->inicio;
 	
 	} else {
 		REC_error(MEM_FULL);
-		return 0;	
+		return -1;	
 	}
 	
 }
@@ -199,8 +214,8 @@ void show_used_heap() {
 /* carga las instrucciones al inicio del segmento de la celula */
 int load_cel(char *coded_insts, celula *pcel) {
 	memmanager *mman = memmanager_get();
-	memcpy(mman->soup + (pcel->mem)->inicio, coded_insts, pcel->size);
-	pcel->pcpu->ip = (pcel->mem)->inicio;
+	memcpy(mman->soup + pcel->mem, coded_insts, pcel->size);
+	pcel->pcpu->ip = pcel->mem;
 	return 1;
 }
 
@@ -209,16 +224,18 @@ int load_cel(char *coded_insts, celula *pcel) {
  * 2 - Es el espacio del hijo todavia no independiente
  * */
 int auth_w(cpu *pcpu) {
-	segment *seg = NULL;
+	int seg;
+	int fin;
 	celula *pcel = pcpu->pcel;	
 	
-	if ((pcpu->bx >= (int)(pcel->mem)->inicio) && (pcpu->bx <= (int)(pcel->mem)->fin)) {
+	if ((pcpu->bx >= pcel->mem) && (pcpu->bx <= pcel->mem + pcel->size)) {
 		return 1;
 	}
 	if (pcel->hijo) {
 		if ((pcel->hijo)->indep == 0) {
 			seg = ((pcel->hijo)->mem);
-			if (pcpu->ax >= (int)seg->inicio && pcpu->ax <= (int)seg->fin)
+			fin = seg + ((pcel->hijo)->size);
+			if (pcpu->ax >= seg && pcpu->ax <= fin)
 				return 1;
 		}
 	}
@@ -248,7 +265,7 @@ int set_byte(cpu *pcpu) {
 /* Solo puedo ejecutar la division si estoy en mi propio espacio */
 int auth_divide(cpu *pcpu) {
 	celula *pcel = pcpu->pcel;
-	if ((pcpu->ip >= (int)(pcel->mem)->inicio) && (pcpu->ip <= (int)(pcel->mem)->fin)) {
+	if ((pcpu->ip >= pcel->mem) && (pcpu->ip <= pcel->mem + pcel->size)) {
 		return 1;
 	}
 	else

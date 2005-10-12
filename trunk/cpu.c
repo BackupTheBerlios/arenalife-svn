@@ -403,7 +403,7 @@ static void mal(cpu *pcpu) {
 	//if (pcpu->cx!=45 && pcpu->cx!=80) return;
 	
 	//TEMPORAL: solo 2 hijos por ronda
-	if ((pcpu->pcel)->ronda_hijos>2) return;
+	if ((pcpu->pcel)->ronda_hijos > 2) return;
 	
 	//si ya tuve un hijo y este es independiente ó si no tuve hijos
 	if (phijo==NULL) {
@@ -414,12 +414,14 @@ static void mal(cpu *pcpu) {
 			phijo->size = pcpu->cx;
 			//printf("%d\n",phijo->size);
 			//pthread_mutex_lock(&maloc);
-			if ((phijo->mem = Vmalloc(phijo->size))) {
-				pcpu->ax = (phijo->mem)->inicio;
+			phijo->mem = Vmalloc(phijo->size);
+			if (phijo->mem != EMALLOC) {
+				pcpu->ax = phijo->mem;
 				phijo->pcpu->ip = pcpu->ax;
 				(pcpu->pcel)->hijo = phijo;
-			} else
+			} else {
 				pcel->die(pcel);
+			}
 			//pthread_mutex_unlock(&maloc);
 		}
 	}
@@ -434,7 +436,6 @@ static void divide(cpu *pcpu) {
 		pcpu->ip++;
 		return;
 	}
-
 	//si tengo algun hijo (maloc bien)...
 	pthread_mutex_lock(&divide_f);
 	if ((pcpu->pcel)->hijo) {
