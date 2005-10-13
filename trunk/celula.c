@@ -12,7 +12,6 @@
 #include "genbank.h"
 #include "mutation.h"
 #include "globals.h"
-#include "slicer.h"
 
 static void celula_const(celula *cel) {
 	cel->load_from_file = &load_from_file;
@@ -84,14 +83,6 @@ void * vivir_thread(void *p) {
 			}
 			
 			REC_instexec();
-			
-			/*
-			pslicer->inst_exec++;
-			
-			if (pslicer->inst_exec%20000==0) {
-				printf("inst. executed: %d\n", pslicer->inst_exec);	
-			}
-			*/
 		}
 		
 #ifndef MT

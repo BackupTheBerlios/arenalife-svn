@@ -431,7 +431,8 @@ static void mal(cpu *pcpu) {
 pthread_mutex_t divide_f;
 static void divide(cpu *pcpu) {
 	celula *phijo;
-
+ 	slicer *pslicer = slicer_get();
+ 
 	if (!auth_divide(pcpu)) {
 		pcpu->ip++;
 		return;
@@ -444,7 +445,8 @@ static void divide(cpu *pcpu) {
 				//lista_put(cola, phijo);
 				phijo->padre = (pcpu->pcel);
 				
-				crear_hijo(phijo);
+				//slicer
+				pslicer->crear_hijo(phijo);
 				
 				//premio
 				//solo si es clone

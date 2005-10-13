@@ -77,12 +77,12 @@ void play_god(char *ancest) {
 		/* Mutacion al azar cada BG_MUTATION_RATE insts.*/	
 		mman->soup_mutate();
 		
-		/* relista la lista del cleaner para favorecer a los mas aptos */
+		/* relista la lista del reaper para favorecer a los mas aptos */
 		pslicer->relist();	
 			
 		/* libero memoria hasta llegar al umbral PROP_FREE */
 		while (!mman->enough_free())
-			pslicer->cleaner();	
+			pslicer->reaper();	
 		
 		
 		/* antes de comenzar otra ronda, defragmento la RAM */

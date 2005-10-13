@@ -12,8 +12,7 @@
 #define DEBUG_SLI
 
 static GSList *slicer_list = NULL;
-static GSList *cleaner_list = NULL;
-static GSList *nacidos_list = NULL;
+static GSList *reaper_list = NULL;
 
 static slicer *the_slicer = NULL; //no puedo hacer extern ... desde otro modulo
 
@@ -30,15 +29,15 @@ static int create_cel_id(slicer *pthis) {
 }
 
 static void slicer_const(slicer *pthis) {
-	pthis->add = &add;
+	pthis->agregar_organismo = &agregar_organismo;
 	pthis->create_celula_from_file = &create_celula_from_file;
 	pthis->create_celula_from_bytes = &create_celula_from_bytes;
 	pthis->crear_hijo = &crear_hijo;
-	pthis->remover_celula = remover_celula;	
+	pthis->remover_organismo = remover_organismo;	
 	pthis->get_cel_slices = &get_cel_slices;
 	pthis->give_slice = &give_slice;
 	pthis->get_total = &get_total;
-	pthis->cleaner = &cleaner;
+	pthis->reaper = &reaper;
 	pthis->relist = &relist;
 	pthis->ncels = 0;
 	pthis->inst_exec = 0;
@@ -55,11 +54,11 @@ slicer* slicer_get(void) {
 	return the_slicer;		
 }
 
-int remover_celula(celula *pcel) {
+int remover_organismo(celula *pcel) {
 	slicer *pthis = slicer_get();
 	if (g_slist_find(slicer_list, pcel)) {
 		slicer_list=g_slist_remove(slicer_list, pcel);
-		cleaner_list=g_slist_remove(cleaner_list, pcel);
+		reaper_list=g_slist_remove(reaper_list, pcel);
 		pcel->die(pcel);
 		REC_cel_eliminada(pcel->size);
 	} 
@@ -73,7 +72,7 @@ int remover_celula(celula *pcel) {
 
 static celula* next_tobe_cleaned (void) {
 	celula *pcel=NULL;
-	pcel = g_slist_nth_data(cleaner_list,0);
+	pcel = g_slist_nth_data(reaper_list,0);
 	
 	if (pcel == NULL) {
 		return NULL; //no more cels
@@ -81,7 +80,7 @@ static celula* next_tobe_cleaned (void) {
 	return pcel;
 }
 
-int cleaner(void) {
+int reaper(void) {
 	slicer *pthis = slicer_get();
 	celula *pcel = NULL;
 	pcel = next_tobe_cleaned();
@@ -91,7 +90,7 @@ int cleaner(void) {
 		if (phijo && phijo->indep==0) {
 			phijo->die(phijo);
 		}
-		pthis->remover_celula(pcel);
+		pthis->remover_organismo(pcel);
 	}
 	else
 		assert(0);
@@ -117,13 +116,9 @@ int crear_hijo(celula *pcel) {
 	/* guarda genoma en disco */
 	pcel->save(pcel);
 
-	/* agrega a la lista del slicer y cleaner */	
-	pthis->add(pcel);
+	/* agrega a la lista del slicer y reaper */	
+	pthis->agregar_organismo(pcel);
 	return 1;
-}
-
-void dividir(celula *pcel) {
-	g_slist_append(nacidos_list, pcel);
 }
 
 celula * create_celula_from_bytes(char *genoma, int len) {
@@ -139,7 +134,7 @@ celula * create_celula_from_bytes(char *genoma, int len) {
 		pcel->pvida = vidacont++;	
 		pcel->slices = pthis->get_cel_slices(pcel);
 		pthis->ncels++; 
-		pthis->add(pcel);
+		pthis->agregar_organismo(pcel);
 	}
 	else {
 		pcel->die(pcel);
@@ -161,7 +156,7 @@ celula * create_celula_from_file(char *filename) {
 		pcel->pvida = vidacont++;	
 		pcel->slices = pthis->get_cel_slices(pcel);
 		pthis->ncels++; 
-		pthis->add(pcel);
+		pthis->agregar_organismo(pcel);
 	}
 	else {
 		pcel->die(pcel);
@@ -262,11 +257,11 @@ static gint pvida_comp (gconstpointer a, gconstpointer b) {
 /* las celulas que produjeron algun error o vivieron mucho reducen su pvida,
  *  por eso debo relistar para cambiar el orden */
 void relist(void) {
-	cleaner_list = g_slist_sort(cleaner_list, pvida_comp);
+	reaper_list = g_slist_sort(reaper_list, pvida_comp);
 }
 
 pthread_mutex_t add_f;
-void add (celula* cel) {
+void agregar_organismo (celula* cel) {
 	assert(cel->size);
 	REC_cel_creada(cel->size);
 	
@@ -277,7 +272,7 @@ void add (celula* cel) {
 		slicer_list= g_slist_append(slicer_list,cel);
 	} else	
 		slicer_list=g_slist_insert_before(slicer_list, lpadre ,cel);
-	cleaner_list= g_slist_append(cleaner_list,cel);
+	reaper_list= g_slist_append(reaper_list,cel);
 	pthread_mutex_unlock(&add_f);
 }
 
