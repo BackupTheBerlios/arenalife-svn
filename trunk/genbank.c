@@ -4,7 +4,7 @@
 #include <pthread.h>
 #include <string.h>
 #include "genbank.h"
-#include "celula.h"
+#include "organismo.h"
 #include "instructor.h"
 #include "assert.h"
 #include "globals.h"

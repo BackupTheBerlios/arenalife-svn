@@ -17,7 +17,7 @@ struct cpu{
 	int st[STACKSIZE]; // stack
 	int ip; // instruction pointer	
 
-	struct celula *pcel;
+	struct organismo *pcel;
 	
 	int instexec;
 

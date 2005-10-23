@@ -13,7 +13,7 @@
 #include "mutation.h"
 #include "globals.h"
 
-static void celula_const(celula *cel) {
+static void organismo_const(organismo *cel) {
 	cel->load_from_file = &load_from_file;
 	cel->load_from_bytes = &load_from_bytes;
 	cel->vivir_thread = &vivir_thread;
@@ -24,7 +24,7 @@ static void celula_const(celula *cel) {
 	
 	(cel->pcpu)->run = &run;
 	
-	/* El CPU mantiene una referencia a la celula */
+	/* El CPU mantiene una referencia a la organismo */
 	(cel->pcpu)->pcel = cel;
 
 	cel->save = &save;
@@ -37,13 +37,13 @@ static void celula_const(celula *cel) {
 	cel->ronda_hijos=0;
 }
 
-celula* celula_new(void) {
-	celula *pcel = malloc(sizeof(*pcel));
-	celula_const(pcel);
+organismo* organismo_new(void) {
+	organismo *pcel = malloc(sizeof(*pcel));
+	organismo_const(pcel);
 	return pcel;
 }
 
-void die(celula *pthis) {
+void die(organismo *pthis) {
 	memmanager *mman = memmanager_get();
 	pthis->alive = 0;
 
@@ -57,7 +57,7 @@ void die(celula *pthis) {
 	free(pthis);
 }
 
-int put_in_soup(celula *pcel) {
+int put_in_soup(organismo *pcel) {
 	pcel->mem = Vmalloc(pcel->size);
 	if (pcel->mem != EMALLOC)
 		return 1;
@@ -67,7 +67,7 @@ int put_in_soup(celula *pcel) {
 
 void * vivir_thread(void *p) {
 	int i;
-	celula *pthis = (celula*)p;
+	organismo *pthis = (organismo*)p;
 	
 	//envejece
 	pthis->pvida--;
@@ -98,7 +98,7 @@ static void lib (gpointer a, gpointer nada) {
 	free(a);	
 }
 
-int load_from_bytes (celula *pthis, char *insts, int len) {
+int load_from_bytes (organismo *pthis, char *insts, int len) {
 	memmanager *mman = memmanager_get();
 	//int i;
 	//printf ("New cel of size %d\n",len);
@@ -112,7 +112,7 @@ int load_from_bytes (celula *pthis, char *insts, int len) {
 	return 1;	
 }
 
-int load_from_file(celula *pthis, char *filename) {
+int load_from_file(organismo *pthis, char *filename) {
 	char* coded_insts;
 	GSList* idecoded_insts;
 	memmanager *mman = memmanager_get();
@@ -140,7 +140,7 @@ int load_from_file(celula *pthis, char *filename) {
 }
 
 
-int save(celula *pthis) {
+int save(organismo *pthis) {
 
 #ifdef SAVE_GENOMAS
 	if (pthis->size!=(pthis->padre)->size) return 1;
@@ -182,7 +182,7 @@ int are_clones(char *padre_g, char *hijo_g, int size) {
 	
 }
 
-char* get_genoma (celula *pthis) {
+char* get_genoma (organismo *pthis) {
 	int i;
 	//LIBERAR MEM, LIBERAR MEM!!!!!!!!!
 	char *genoma = malloc(pthis->size);

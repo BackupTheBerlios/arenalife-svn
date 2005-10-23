@@ -1,7 +1,7 @@
 #ifndef _GENBANK_
 #define _GENBANK_
 
-#include "celula.h"
+#include "organismo.h"
 
 typedef struct clase_genoma clase_genoma;
 

@@ -4,7 +4,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <glib.h>
-#include "celula.h"
+#include "organismo.h"
 #include "globals.h"
 
 typedef struct slicer slicer;
@@ -21,31 +21,31 @@ struct slicer {
 	unsigned long long int idsacum;
 	int inst_exec; //instrucciones ejecutadas
 		
-	void (*agregar_organismo) (celula*);	
-	celula* (*create_celula_from_file)(char*);
-	celula* (*create_celula_from_bytes)(char*, int);
-	int (*crear_hijo)(celula*);
-	int (*remover_organismo)(celula *pcel);
+	void (*agregar_organismo) (organismo*);	
+	organismo* (*organismo_desde_archivo_new)(char*);
+	organismo* (*organismo_desde_bytes_new)(char*, int);
+	int (*crear_hijo)(organismo*);
+	int (*remover_organismo)(organismo *pcel);
 	int (*create_cel_id)(void);
-	int (*get_cel_slices)(celula*);
-	int (*give_slice)(void);
+	int (*get_cel_slices)(organismo*);
+	int (*correr_ronda)(void);
 	int (*reaper)(void);
 	void (*relist)(void);
 	int (*get_total)(void);
 };
 
 /* Metodos Privados */
-void agregar_organismo(celula*);
-int remover_organismo(celula *pcel);
-int get_cel_slices(celula*);
+void agregar_organismo(organismo*);
+int remover_organismo(organismo *pcel);
+int get_cel_slices(organismo*);
 
 /* Metodos Publicos */
 slicer* slicer_get(void);
 void relist(void);
 int reaper(void);
 int get_total(void);
-celula* create_celula_from_file(char*);
-celula * create_celula_from_bytes(char *, int);
-int crear_hijo(celula*);
-int give_slice(void);
+organismo* organismo_desde_archivo_new(char*);
+organismo * organismo_desde_bytes_new(char *, int);
+int crear_hijo(organismo*);
+int correr_ronda(void);
 #endif

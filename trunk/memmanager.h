@@ -2,7 +2,7 @@
 #define _MEMMANAGER_H
 
 #include <glib.h>
-#include "celula.h"
+#include "organismo.h"
 
 #define SOUP_SIZE 70000 //bytes
 #define PROP_FREE 30 //porcentaje que el cleaner mantiene libre en la soup
@@ -20,7 +20,7 @@ struct memmanager {
 	char *soup;	
 	int (*Vmalloc)(unsigned int size);
 	void (*Vfree)(unsigned int mem);
-	int (*load_cel)(char*, celula*);
+	int (*load_cel)(char*, organismo*);
 	void (*init_heap)(void);
 	void (*show_free_heap)(void);
 	void (*show_used_heap)(void);
@@ -54,7 +54,7 @@ void assert_mem(void);
 int total_free(void);
 memmanager* memmanager_get(void);
 void memmanager_reset(void);
-int load_cel(char*, celula*);
+int load_cel(char*, organismo*);
 void show_free_heap(void);
 void show_used_heap(void);
 int enough_free(void);

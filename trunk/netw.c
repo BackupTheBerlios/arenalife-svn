@@ -43,7 +43,7 @@ static void * inject (void *fd) {
 	}
 		
 	/* al slicer ... */
-	pslicer->create_celula_from_bytes(genoma, bytes);
+	pslicer->organismo_desde_bytes_new(genoma, bytes);
 	
 	free(genoma);
 

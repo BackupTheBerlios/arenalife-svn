@@ -7,7 +7,7 @@
 #include "slicer.h"
 #include "instructor.h"
 #include "memmanager.h"
-#include "celula.h"
+#include "organismo.h"
 #include "mutation.h"
 #include "globals.h"
 
@@ -396,7 +396,7 @@ static void adrf(cpu *pcpu) {
 //done
 pthread_mutex_t maloc;
 static void mal(cpu *pcpu) {
-	celula *phijo = pcpu->pcel->hijo;
+	organismo *phijo = pcpu->pcel->hijo;
 	
 	pcpu->ip++;
 
@@ -408,7 +408,7 @@ static void mal(cpu *pcpu) {
 	//si ya tuve un hijo y este es independiente ó si no tuve hijos
 	if (phijo==NULL) {
 		if (pcpu->cx > 19 && pcpu->cx < MAX_CLASS) {
-			celula *pcel = celula_new();
+			organismo *pcel = organismo_new();
 			phijo = pcel;	
 	
 			phijo->size = pcpu->cx;
@@ -430,7 +430,7 @@ static void mal(cpu *pcpu) {
 //done
 pthread_mutex_t divide_f;
 static void divide(cpu *pcpu) {
-	celula *phijo;
+	organismo *phijo;
  	slicer *pslicer = slicer_get();
  
 	if (!auth_divide(pcpu)) {

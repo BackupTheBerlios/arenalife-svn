@@ -11,12 +11,12 @@
 
 #define DEBUG_SLI
 
-static GSList *slicer_list = NULL;
+static GList *slicer_list = NULL;
 static GSList *reaper_list = NULL;
 
 static slicer *the_slicer = NULL; //no puedo hacer extern ... desde otro modulo
 
-/* para asignar pvida a las celulas */
+/* para asignar pvida a las organismos */
 static unsigned long long int vidacont=0;
 
 static pthread_mutex_t acum;
@@ -30,12 +30,12 @@ static int create_cel_id(slicer *pthis) {
 
 static void slicer_const(slicer *pthis) {
 	pthis->agregar_organismo = &agregar_organismo;
-	pthis->create_celula_from_file = &create_celula_from_file;
-	pthis->create_celula_from_bytes = &create_celula_from_bytes;
+	pthis->organismo_desde_archivo_new = &organismo_desde_archivo_new;
+	pthis->organismo_desde_bytes_new = &organismo_desde_bytes_new;
 	pthis->crear_hijo = &crear_hijo;
 	pthis->remover_organismo = remover_organismo;	
 	pthis->get_cel_slices = &get_cel_slices;
-	pthis->give_slice = &give_slice;
+	pthis->correr_ronda = &correr_ronda;
 	pthis->get_total = &get_total;
 	pthis->reaper = &reaper;
 	pthis->relist = &relist;
@@ -54,10 +54,10 @@ slicer* slicer_get(void) {
 	return the_slicer;		
 }
 
-int remover_organismo(celula *pcel) {
+int remover_organismo(organismo *pcel) {
 	slicer *pthis = slicer_get();
-	if (g_slist_find(slicer_list, pcel)) {
-		slicer_list=g_slist_remove(slicer_list, pcel);
+	if (g_list_find(slicer_list, pcel)) {
+		slicer_list=g_list_remove(slicer_list, pcel);
 		reaper_list=g_slist_remove(reaper_list, pcel);
 		pcel->die(pcel);
 		REC_cel_eliminada(pcel->size);
@@ -70,10 +70,13 @@ int remover_organismo(celula *pcel) {
 }
 
 
-static celula* next_tobe_cleaned (void) {
-	celula *pcel=NULL;
-	pcel = g_slist_nth_data(reaper_list,0);
+static organismo* next_tobe_cleaned (void) {
+	organismo *pcel=NULL;
+	//pcel = g_slist_nth_data(reaper_list,0);
 	
+	// por ser el 1er elemento
+	pcel = reaper_list->data;
+
 	if (pcel == NULL) {
 		return NULL; //no more cels
 	}
@@ -82,10 +85,10 @@ static celula* next_tobe_cleaned (void) {
 
 int reaper(void) {
 	slicer *pthis = slicer_get();
-	celula *pcel = NULL;
+	organismo *pcel = NULL;
 	pcel = next_tobe_cleaned();
 	if (pcel) {
-		celula *phijo = pcel->hijo;
+		organismo *phijo = pcel->hijo;
 		/* si maloque para un hijo pero este todavia no es independiente, me lo llevo */
 		if (phijo && phijo->indep==0) {
 			phijo->die(phijo);
@@ -98,12 +101,12 @@ int reaper(void) {
 }
 
 int get_total() {
-	return g_slist_length(slicer_list);
+	return g_list_length(slicer_list);
 }
 
 
 static pthread_mutex_t crear_hijo_f;
-int crear_hijo(celula *pcel) {
+int crear_hijo(organismo *pcel) {
 	slicer *pthis = slicer_get();
 	pcel->id = create_cel_id(pthis);
 	pcel->indep=1;
@@ -121,9 +124,9 @@ int crear_hijo(celula *pcel) {
 	return 1;
 }
 
-celula * create_celula_from_bytes(char *genoma, int len) {
+organismo * organismo_desde_bytes_new(char *genoma, int len) {
 	slicer *pthis = slicer_get();
-	celula *pcel = celula_new();
+	organismo *pcel = organismo_new();
 	
 	//evito inyectar mientras el modulo arena prepara todo para otra ronda
 	pthread_mutex_lock(&pthis->ronda_mutex);	
@@ -146,9 +149,9 @@ celula * create_celula_from_bytes(char *genoma, int len) {
 }
 
 
-celula * create_celula_from_file(char *filename) {
+organismo * organismo_desde_archivo_new(char *filename) {
 	slicer *pthis = slicer_get();
-	celula *pcel = celula_new();
+	organismo *pcel = organismo_new();
 	
 	if(pcel->load_from_file(pcel, filename)) {
 		pcel->indep=1;
@@ -175,9 +178,9 @@ static void wait_threads(void) {
 }
 #endif
 
-/* para cada celula en la ronda ... */
+/* para cada organismo en la ronda ... */
 static void cel_time(gpointer c, gpointer nada) {
-	celula *pcel = (celula *)c;
+	organismo *pcel = (organismo *)c;
 	pcel->ronda_hijos=0;
 #ifdef MT
 	slicer *pthis = slicer_get();
@@ -196,11 +199,11 @@ static void cel_time(gpointer c, gpointer nada) {
 #endif
 }
 
-int give_slice() {
+int correr_ronda() {
 	slicer *pthis = slicer_get();
 
-	/* si no hay celulas, espero a que alguien inyecte */
-	if (g_slist_length(slicer_list)<1) {
+	/* si no hay organismos, espero a que alguien inyecte */
+	if (g_list_length(slicer_list)<1) {
 		pthread_mutex_lock(&pthis->wait_m);
 		pthread_cond_wait(&pthis->wait_c, &pthis->wait_m);
 		pthread_mutex_unlock(&pthis->wait_m);
@@ -208,8 +211,8 @@ int give_slice() {
 
 	pthis->cont_hilos=0;
        
-        // para cada celula...	
-	g_slist_foreach(slicer_list, cel_time, NULL);
+        // para cada organismo...	
+	g_list_foreach(slicer_list, cel_time, NULL);
 #ifdef MT
 	// si hay hilos corriendo...
 	if (pthis->cont_hilos > 0)
@@ -224,16 +227,16 @@ int give_slice() {
 }
 
 
-int get_cel_slices(celula* pcel) {
+int get_cel_slices(organismo* pcel) {
 	// exp > 1 BENEFICIA A LAS CRIATURAS MAS GRANDES
 	// exp < 1 BENEFICIA A LAS CRIATURAS MAS CHICAS
 	// exp = 1 NEUTRAL
 	int slices;
-	double exp = 1.0;
+	double exp = 0.7;
 
-	//slices= (int)pow((double)pcel->size, exp);
+	slices= (int)powf((double)pcel->size, exp);
 	
-	slices=20;
+	//slices=20;
 	
 	//slices = pcel->size;
 
@@ -243,9 +246,9 @@ int get_cel_slices(celula* pcel) {
 }
 
 static gint pvida_comp (gconstpointer a, gconstpointer b) {
-	celula *pa, *pb;
-	pa = (celula *)a;
-	pb = (celula *)b;
+	organismo *pa, *pb;
+	pa = (organismo *)a;
+	pb = (organismo *)b;
 	if (pa->pvida < pb->pvida)
 		return -1;
 	else if (pa->pvida > pb->pvida)
@@ -254,24 +257,24 @@ static gint pvida_comp (gconstpointer a, gconstpointer b) {
 		return 0;
 }
 
-/* las celulas que produjeron algun error o vivieron mucho reducen su pvida,
+/* las organismos que produjeron algun error o vivieron mucho reducen su pvida,
  *  por eso debo relistar para cambiar el orden */
 void relist(void) {
 	reaper_list = g_slist_sort(reaper_list, pvida_comp);
 }
 
 pthread_mutex_t add_f;
-void agregar_organismo (celula* cel) {
+void agregar_organismo (organismo* cel) {
 	assert(cel->size);
 	REC_cel_creada(cel->size);
 	
-	GSList *lpadre = NULL;
+	GList *lpadre = NULL;
 	pthread_mutex_lock(&add_f);
-	lpadre = g_slist_find(slicer_list, cel->padre);
+	lpadre = g_list_find(slicer_list, cel->padre);
 	if (lpadre==NULL) {
-		slicer_list= g_slist_append(slicer_list,cel);
+		slicer_list= g_list_append(slicer_list,cel);
 	} else	
-		slicer_list=g_slist_insert_before(slicer_list, lpadre ,cel);
+		slicer_list=g_list_insert_before(slicer_list, lpadre ,cel);
 	reaper_list= g_slist_append(reaper_list,cel);
 	pthread_mutex_unlock(&add_f);
 }

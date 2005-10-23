@@ -152,7 +152,7 @@ int Vmalloc(unsigned int csize) {
 	
 		pthis->free -= newseg->size;
 
-		//asigno mem a celula
+		//asigno mem a organismo
 		if (!newseg) REC_error(MAL_ERROR);
 	
 		REC_memory_free(total_free());
@@ -211,8 +211,8 @@ void show_used_heap() {
 }
 
 
-/* carga las instrucciones al inicio del segmento de la celula */
-int load_cel(char *coded_insts, celula *pcel) {
+/* carga las instrucciones al inicio del segmento de la organismo */
+int load_cel(char *coded_insts, organismo *pcel) {
 	memmanager *mman = memmanager_get();
 	memcpy(mman->soup + pcel->mem, coded_insts, pcel->size);
 	pcel->pcpu->ip = pcel->mem;
@@ -220,13 +220,13 @@ int load_cel(char *coded_insts, celula *pcel) {
 }
 
 /* autorizo a escribir solo si:
- * 1 - Es el espacio de la misma celula 
+ * 1 - Es el espacio de la misma organismo 
  * 2 - Es el espacio del hijo todavia no independiente
  * */
 int auth_w(cpu *pcpu) {
 	int seg;
 	int fin;
-	celula *pcel = pcpu->pcel;	
+	organismo *pcel = pcpu->pcel;	
 	
 	if ((pcpu->bx >= pcel->mem) && (pcpu->bx <= pcel->mem + pcel->size)) {
 		return 1;
@@ -264,7 +264,7 @@ int set_byte(cpu *pcpu) {
 
 /* Solo puedo ejecutar la division si estoy en mi propio espacio */
 int auth_divide(cpu *pcpu) {
-	celula *pcel = pcpu->pcel;
+	organismo *pcel = pcpu->pcel;
 	if ((pcpu->ip >= pcel->mem) && (pcpu->ip <= pcel->mem + pcel->size)) {
 		return 1;
 	}

@@ -4,7 +4,7 @@ LDLIBS=-lpthread -lncurses
 CC=ccache gcc
 CPP=ccache g++
 TARGETS=arena injecter
-OBJS= netw.o celula.o slicer.o main.o cpu.o arena.o instructor.o memmanager.o estadistica.o ui.o render.o mutation.o genbank.o
+OBJS= netw.o organismo.o slicer.o main.o cpu.o arena.o instructor.o memmanager.o estadistica.o ui.o render.o mutation.o genbank.o
 
 TEST_LIBS = tests/MemSuite.h
 
@@ -13,7 +13,7 @@ DEPS= memmanager.c estadistica.c mutation.c
 all : $(TARGETS)
 
 arena:  $(OBJS)
-	$(CC) -o $@ $(OBJS) $(LDFLAGS) $(LDLIBS)
+	$(CC) -o $@ $(OBJS) $(LDFLAGS) $(LDLIBS) -lm
 
 injecter: injecter.o instructor.o
 	$(CC) -o $@ $^ $(LDFLAGS) 

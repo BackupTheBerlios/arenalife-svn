@@ -46,11 +46,11 @@ void play_god(char *ancest) {
 		
 	//INCORPORA EL ANCESTRO
 	if (ancest)
-		pslicer->create_celula_from_file(ancest);
+		pslicer->organismo_desde_archivo_new(ancest);
 			
 	
-	/* Ronda para todas las celulas */
-	while (pslicer->give_slice()) { 		
+	/* Ronda para todas las organismos */
+	while (pslicer->correr_ronda()) { 		
 
 		pthread_mutex_lock(&pslicer->ronda_mutex);
 
