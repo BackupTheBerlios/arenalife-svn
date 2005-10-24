@@ -4,11 +4,11 @@
 #define CPU_MUTATION_RATE 10000 
 #define COPY_MUTATION_RATE 7000
 #define GENOMA_SAVE_RATE 100
-#define SEARCH_LIMIT 400
+#define SEARCH_LIMIT 1000
 #define MAX_TEMPL_SIZE 10 
 #define UI
 //#define MT
 #define NHILOS 5
 #define SAVE_GENOMAS
 #define N_DOMINANTES 3
-#define MAX_CLASS 400
+#define MAX_CLASS 1000

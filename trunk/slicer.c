@@ -232,7 +232,7 @@ int get_cel_slices(organismo* pcel) {
 	// exp < 1 BENEFICIA A LAS CRIATURAS MAS CHICAS
 	// exp = 1 NEUTRAL
 	int slices;
-	double exp = 0.7;
+	double exp = 1.2;
 
 	slices= (int)powf((double)pcel->size, exp);
 	

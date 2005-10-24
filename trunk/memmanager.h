@@ -4,7 +4,7 @@
 #include <glib.h>
 #include "organismo.h"
 
-#define SOUP_SIZE 70000 //bytes
+#define SOUP_SIZE 200000 //bytes
 #define PROP_FREE 30 //porcentaje que el cleaner mantiene libre en la soup
 
 #define EMALLOC -1
