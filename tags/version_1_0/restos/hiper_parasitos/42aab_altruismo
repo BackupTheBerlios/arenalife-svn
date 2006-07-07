@@ -1,0 +1,43 @@
+nop1
+divide
+not0
+adrb
+nop0
+movab
+sub_ac
+movab
+adrf
+nop1
+nop0
+nop0
+sub_ab
+nop1
+nop1
+nop0
+movcd
+pushax
+mal
+pushcx
+nop1 ; inicio copy loop
+nop0
+nop1
+nop0
+movii
+dec_c
+ifz
+jmp ; cuando termina de copiar, salta al final... algun hijo? altruismo?. Evita ser usado por algun parasito
+nop1
+nop0
+nop0
+inc_a
+inc_b
+jmp
+nop0 ; fin copy loop
+nop1
+nop0
+nop1
+popbx
+inc_a
+nop0
+nop1
+nop1

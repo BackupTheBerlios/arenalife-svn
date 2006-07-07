@@ -1,0 +1,7 @@
+set xlabel 'Generaciones'
+set ylabel 'Clase Dominante'
+set grid
+#set ytics 10
+plot 'doms/dominantes1' using 1:2 title "1er Dominante" with lines
+replot 'doms/dominantes1' using 1:4 title "2do Dominante" with lines
+replot 'doms/dominantes1' using 1:6 title "3er Dominante "with lines
