@@ -1,8 +1,8 @@
 CFLAGS=$(shell pkg-config glib-2.0 --cflags) -g -Wall $(COPTS)
 LDFLAGS=$(shell pkg-config glib-2.0 --libs)
 LDLIBS=-lpthread -lncurses
-CC=ccache gcc
-CPP=ccache g++
+CC=gcc
+CPP=g++
 TARGETS=arena injecter
 OBJS= netw.o organismo.o slicer.o main.o cpu.o arena.o instructor.o memmanager.o estadistica.o ui.o render.o mutation.o genbank.o
 
